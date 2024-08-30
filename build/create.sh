@@ -100,9 +100,10 @@ EOF
   fi
   
   # Should we enable SSH?
-  # if [ $ENABLESSH = "1" ];then
-  #   # enabled by default on ubuntu
-  # fi
+  if [ $ENABLESSH = "1" ];then
+    chroot $MNT systemctl enable ssh
+    chroot $MNT systemctl start ssh
+  fi
 
   # Should we update with rpi-update?
   # if [ ! -z $RPIUPDATE ];then
