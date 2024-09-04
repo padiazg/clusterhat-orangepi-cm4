@@ -208,6 +208,13 @@ COMMIT
 COMMIT
 # Completed on Fri Mar 13 00:00:00 2018
 EOF
+        
+        # Set eth0 to get an ip address via dhcp
+        cat << EOF >> $MNT/etc/network/interfaces.d/eth0
+# eth0
+auto eth0
+iface eth0 inet dhcp
+EOF
 
         # Set custom password
         if [ ! -z $PASSWORD ];then
