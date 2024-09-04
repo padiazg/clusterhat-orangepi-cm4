@@ -40,7 +40,7 @@ $ sudo ./create.sh Orangepicm4_1.0.6
 ```
 
 ## To fix
-* ~~Networking: ipv4 address not assigned~~
+* Networking: ipv4 address not assigned
 * clusterctrl: error `No module 'smbus'`
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1
