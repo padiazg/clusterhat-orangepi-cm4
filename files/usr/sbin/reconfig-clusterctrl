@@ -72,7 +72,7 @@ if [ ! -z $1 ];then
   # Setup the interfaces/issue files
   if [ "$1" = "cnat" ];then
    rm -f /etc/network/interfaces.d/clusterctrl
-   if [ $VERSION_CODENAME = "bookworm" ];then
+   if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy"];then
     cp -f "$CONFIGDIR/interfaces.bookworm.cnat" /etc/network/interfaces.d/clusterctrl
    else
     cp -f "$CONFIGDIR/interfaces.cnat" /etc/network/interfaces.d/clusterctrl
@@ -93,7 +93,7 @@ if [ ! -z $1 ];then
    echo "TYPE=cnat" >> /etc/default/clusterctrl
   elif [ "$1" = "cbridge" ];then
    rm -f /etc/network/interfaces.d/clusterctrl
-   if [ $VERSION_CODENAME = "bookworm" ];then
+   if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
     cp -f "$CONFIGDIR/interfaces.bookworm.cbridge" /etc/network/interfaces.d/clusterctrl
    else
     cp -f "$CONFIGDIR/interfaces.cbridge" /etc/network/interfaces.d/clusterctrl
@@ -116,7 +116,7 @@ if [ ! -z $1 ];then
   else
    P=${1:1}
    rm -f /etc/network/interfaces.d/clusterctrl
-   if [ $VERSION_CODENAME = "bookworm" ];then
+   if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
     cp -f "$CONFIGDIR/interfaces.bookworm.p" /etc/network/interfaces.d/clusterctrl
    fi
    cp -f "$CONFIGDIR/issue.p" /etc/issue

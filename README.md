@@ -39,8 +39,14 @@ $ cd build
 $ sudo ./create.sh Orangepicm4_1.0.6
 ```
 
+## Differences from upstream
+* As we are using images for boards different than Raspberry Pi the `/boot/cmdline.txt` is not available so we must use `/boot/orangepiEnv.txt` for setting init scripts. 
+* 32bit processors are out of the scope, we on;y support 64bit proccessors. 
+* Px images are out of the scope for now. I don't think the base images we use for Opi CM4 would be used by any other Rpi Zero clone.
+* Mac address for br0 is set when creating the interface to keep DHCP behavior consistent if you are assigning ip addresses based on it. Check `files/usr/share/clusterctrl/interfaces*`.  
+
 ## To fix
-* Networking: ipv4 address not assigned
+* ~~Networking: ipv4 address not assigned~~
 * clusterctrl: error `No module 'smbus'`
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1

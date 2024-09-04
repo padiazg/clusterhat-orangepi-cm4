@@ -26,7 +26,8 @@ iface br0 inet manual
         bridge_stp off
         bridge_waitport 0
         bridge_fd 0
-        post-up /usr/sbin/copyMAC eth0 br0
+        hwaddress "$(cat /sys/class/net/eth0/address)"
+		# hwaddress "$(ip -json  link show dev eth0 | jq -r .[].address)"
 
 # USB Gadget Ethernet node (controller) interfaces
 
