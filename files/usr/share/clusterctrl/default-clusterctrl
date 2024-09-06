@@ -36,7 +36,7 @@ LINK=1
 #CLUSTERHAT_SIZE=4
 
 # CLUSTERHAT_FORCE - Set to the version number you want to control (overrides HAT EEPROM)
-#CLUSTERHAT_FORCE=1.3
+CLUSTERHAT_FORCE=2.5
 
 # CLUSTERCTRL_DELAY - How many seconds to delay between turning on Pi Zeros
 #CLUSTERCTRL_DELAY=1

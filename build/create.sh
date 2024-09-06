@@ -154,32 +154,34 @@ EOF
             sed -i "s/\(.*\)/#\1/" $MNT/etc/ld.so.cache
         fi
 
-        chroot $MNT apt -y purge network-manager # iw
+        chroot $MNT apt -y purge network-manager docker-ce docker-ce-cli vim vim-runtime vim-common # iw
 
         # Get any updates / install and remove pacakges
         chroot $MNT apt update -y
         if [ $UPGRADE = "1" ]; then
             chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y dist-upgrade'
+            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y upgrade' # not sure if needed
         fi
 
-        INSTALL = "rpiboot bridge-utils screen minicom git libusb-1.0-0-dev nfs-kernel-server busybox"
-        INSTALLEXTRA += " initramfs-tools-core python3-smbus python3-usb python3-libusb1 ifmetric"
+        INSTALL="rpiboot bridge-utils screen minicom git libusb-1.0-0-dev nfs-kernel-server busybox"
+        INSTALL+=" initramfs-tools-core python3-smbus python3-usb python3-usb1 python3-libusb1 ifmetric" # extras
+        INSTALL+=" gpiod libgpiod2" # needed by clusterctrl
 
         if [ $RELEASE =  "BOOKWORM" -o $RELEASE = "JAMMY" ]; then
-            INSTALLEXTRA+=" python3-libgpiod"
+            INSTALL+=" python3-libgpiod"
         fi
 
-        chroot $MNT apt -y install $INSTALL $INSTALLEXTRA # subversion
-
+        chroot $MNT /bin/bash -c "APT_LISTCHANGES_FRONTEND=none apt -y install $INSTALL"
+        
         # Setup ready for iptables for NAT for NAT/WiFi use
         # Preseed answers for iptables-persistent install
         chroot $MNT /bin/bash -c "echo 'iptables-persistent iptables-persistent/autosave_v4 boolean false' | debconf-set-selections"
         chroot $MNT /bin/bash -c "echo 'iptables-persistent iptables-persistent/autosave_v6 boolean false' | debconf-set-selections"
 
-        chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y install iptables-persistent'
+        chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y install netfilter-persistent iptables-persistent'
 
         # Remove ModemManager
-        chroot $MNT systemctl disable ModemManager.service
+        # chroot $MNT systemctl disable ModemManager.service
         # ERROR: Failed to disable unit, unit ModemManager.service does not exist.
         chroot $MNT apt -y purge modemmanager
         chroot $MNT apt-mark hold modemmanager  
@@ -215,9 +217,6 @@ EOF
                 chroot $MNT useradd $USERNAME --password $PASSWORD --groups tty,disk,dialout,sudo,audio,video,plugdev,games,users,systemd-journal,input,netdev
             else
                 chroot $MNT /bin/bash -c "echo 'orangepi:$PASSWORD' | chpasswd"
-                # ERROR: chpasswd: (user orangepi) pam_chauthtok() failed, error:
-                # Authentication token manipulation error
-                # chpasswd: (line 1, user orangepi) password not changed
             fi
         fi
 
@@ -297,7 +296,7 @@ EOF
         # TODO
 
         # Enable I2C (used for I/O expander on Cluster HAT v2.x)
-        # TODO: confiem it's already enabled??
+        echo "overlays=i2c2-m1" >> $MNT/$FW/orangepiEnv.txt
 
         # Change the hostname to "cbridge"
         sed -i "s#^127.0.1.1.*#127.0.1.1\tcbridge#g" $MNT/etc/hosts
@@ -353,12 +352,12 @@ EOF
 
         # Setup config.txt file
         # TODO: this is especific to RPI, wont work on OPI
-        C=`grep -c "dtoverlay=dwc2,dr_mode=peripheral" $MNT/$FW/config.txt`
+        # C=`grep -c "dtoverlay=dwc2,dr_mode=peripheral" $MNT/$FW/config.txt`
 
-        if [ $C -eq 0  ];then
-            echo -e "# Load overlay to allow USB Gadget devices\n#dtoverlay=dwc2,dr_mode=peripheral" >> $MNT/$FW/config.txt
-            echo -e "# Use XHCI USB 2 Controller for Cluster HAT Controllers\n[pi4]\notg_mode=1 # Controller only\n[cm4]\notg_mode=0 # Unless CM4\n[all]\n" >> $MNT/$FW/config.txt
-        fi
+        # if [ $C -eq 0  ];then
+        #     echo -e "# Load overlay to allow USB Gadget devices\n#dtoverlay=dwc2,dr_mode=peripheral" >> $MNT/$FW/config.txt
+        #     echo -e "# Use XHCI USB 2 Controller for Cluster HAT Controllers\n[pi4]\notg_mode=1 # Controller only\n[cm4]\notg_mode=0 # Unless CM4\n[all]\n" >> $MNT/$FW/config.txt
+        # fi
 
         # if [ $RELEASE = "BULLSEYE" ] && [ ! -f "$MNT/$FW/bcm2710-rpi-zero-2.dtb" ];then
         #     cp $MNT/$FW/bcm2710-rpi-3-b.dtb $MNT/$FW/bcm2710-rpi-zero-2.dtb
@@ -370,7 +369,6 @@ EOF
 
         rm -f $MNT/etc/ssh/*key*
         chroot $MNT apt -y autoremove --purge
-        # ERROR: Can not write log (Is /dev/pts mounted?) - posix_openpt (19: No such device)
         chroot $MNT apt clean
 
         if [ $QEMU -eq 1 ];then

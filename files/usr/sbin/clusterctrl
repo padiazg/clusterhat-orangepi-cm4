@@ -119,6 +119,7 @@ if( 'type' not in config or not ( config['type'] == "c" or config['type'] == "cn
 
 # I2C address of ClusterCTRL device
 I2C_ADDRESS	= 0x20
+i2c_bus = 0x01
 
 # Number of Pi Zero in ClusterHAT (set below)
 clusterhat_size = 0
@@ -348,7 +349,20 @@ def is_pi5() -> int:
 				return True
 	return False
 
-# Minimal RPi.GPIO functionality using gpiod for Pi5
+def is_opi() -> int:
+    try:
+        with open('/proc/device-tree/model', 'r') as f:
+            model = f.read()
+        
+        if 'Orange Pi' in model:
+            return True
+
+        return False
+
+    except Exception:
+        return False
+
+# Minimal RPi.GPIO functionality using gpiod for Pi5 and OPi
 class FakeGPIO:
 	BCM=None
 	OUT=None
@@ -377,6 +391,10 @@ class FakeGPIO:
 if is_pi5():
 	import gpiod
 	GPIO = FakeGPIO('gpiochip4')
+elif is_opi():
+	import gpiod
+	GPIO = FakeGPIO('gpiochip4')
+	i2c_bus = 2
 else:
 	import RPi.GPIO as GPIO
 
@@ -449,16 +467,16 @@ if(clusterhat):
 		import xra1200
 		wp_link = 0
 		bus = smbus.SMBus(1)
-		hat = xra1200.Xra1200(bus=1, address=I2C_ADDRESS)
-		p1 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=0)
-		p2 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=1)
-		p3 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=2)
-		p4 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=3)
+		hat = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS)
+		p1 = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=0)
+		p2 = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=1)
+		p3 = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=2)
+		p4 = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=3)
 		if ( version == 2 ):
-			led = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=4)
-		hub = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=5)
-		alert = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=6)
-		wp = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=7)
+			led = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=4)
+		hub = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=5)
+		alert = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=6)
+		wp = xra1200.Xra1200(bus=i2c_bus, address=I2C_ADDRESS, port=7)
 
 		# Get status of I/O Extender
 		dir = hat.get_dir() # I/O pin directions
