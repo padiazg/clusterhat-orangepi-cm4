@@ -114,8 +114,8 @@ sudo i2cset -y -m $((2#00001000)) $I2CBUS 0x20 1 0xff
 ## To fix
 * ~~Networking: ipv4 address not assigned~~
 * ~~clusterctrl: error `No module 'smbus'`~~
-* no `ethpi*` communication, missing or not loaded usb-ndis module?
-* get the kernel identify the hat ans populate the device tree `/proc/device-tree/hat/*`. check https://forums.raspberrypi.com/viewtopic.php?t=108134 and https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
+* ~~no `ethpi*` communication, missing or not loaded usb-ndis module?~~
+* get the kernel identify the hat and populate the device tree `/proc/device-tree/hat/*`. check https://forums.raspberrypi.com/viewtopic.php?t=108134 and https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
 * 
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1
