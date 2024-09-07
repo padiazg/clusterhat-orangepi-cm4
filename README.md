@@ -107,8 +107,7 @@ sudo i2cset -y -m $((2#00001000)) $I2CBUS 0x20 1 0xff
 ## Networking
 When using the cnat image of the controller and there's a dhcp server or a dns server in your network, like a pi-hole setup to use local domain plus valid certificates for it, you might need to do a small setup in order to allow communication from the controller and the Px nodes to the internet.
 ```bash
-$ cd /etc/network/interfaces.d
-$ echo "auto eth0\niface eth0 inet dhcp`
+$ sudo bash -c 'echo "auto eth0\niface eth0 inet dhcp` > /etc/network/interfaces.d/eth0'
 ```
 Reboot or reload the networking service
 
