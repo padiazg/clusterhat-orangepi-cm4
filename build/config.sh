@@ -22,7 +22,7 @@ CONFIGDIR="/usr/share/clusterhat"
 # Default username/password (both must be set)
 # These details are added to userconf.txt in the boot partition.
 USERNAME=""
-PASSWORD="secr3t"
+PASSWORD="raspberry"
 
 # Enable SSH
 ENABLESSH=0
