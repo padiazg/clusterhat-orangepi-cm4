@@ -36,6 +36,7 @@ The **files/** directory contains the files extracted into the root filesystem o
 Run the create script
 ```shell
 $ cd build
+$ sudo rm -rf dest/* ||  sudo rm -rf mnt/*
 $ sudo ./create.sh Orangepicm4_1.0.6
 ```
 
@@ -107,21 +108,27 @@ sudo i2cset -y -m $((2#00001000)) $I2CBUS 0x20 1 0xff
 ## Networking
 When using the cnat image of the controller and there's a dhcp server or a dns server in your network, like a pi-hole setup to use local domain plus valid certificates for it, you might need to do a small setup in order to allow communication from the controller and the Px nodes to the internet.
 ```bash
-$ sudo bash -c 'echo "auto eth0\niface eth0 inet dhcp` > /etc/network/interfaces.d/eth0'
+$ sudo bash -c 'echo "auto eth0\niface eth0 inet dhcp" > /etc/network/interfaces.d/eth0'
 ```
 Reboot or reload the networking service
+
+There's a new config.sh `CNAT_ETH0` variable to setup `eth0` when creating the image
 
 ## Differences from upstream
 * As we are using images for boards different than Raspberry Pi the `/boot/cmdline.txt` is not available so we must use `/boot/orangepiEnv.txt` for setting init scripts. 
 * 32bit processors are out of the scope, we on;y support 64bit proccessors. 
 * Px images are out of the scope for now. I don't think the base images we use for Opi CM4 would be used by any other Rpi Zero clone.
-* Mac address for br0 is set when creating the interface to keep DHCP behavior consistent if you are assigning ip addresses based on it. Check `files/usr/share/clusterctrl/interfaces*`.  
+* Mac address for br0 is set when creating the interface to keep DHCP behavior consistent if you are assigning ip addresses based on it. Check `files/usr/share/clusterctrl/interfaces*`.
+* `CNAT_ETH0` (defaults to 0) to setup the eth0 interface to use dhcp
 
 ## To fix
 * ~~Networking: ipv4 address not assigned~~
 * ~~clusterctrl: error `No module 'smbus'`~~
 * ~~no `ethpi*` communication, missing or not loaded usb-ndis module?~~
-* get the kernel identify the hat and populate the device tree `/proc/device-tree/hat/*`. check https://forums.raspberrypi.com/viewtopic.php?t=108134 and https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
-* 
+* get the kernel identify the hat and populate the device tree `/proc/device-tree/hat/*`.  
+check:
+  * https://forums.raspberrypi.com/viewtopic.php?t=108134
+  * https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
+* `clusterctrl` needs privilege elevation (sudo)
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1

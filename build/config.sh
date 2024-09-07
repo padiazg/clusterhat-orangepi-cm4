@@ -33,6 +33,9 @@ SERIALAUTOLOGIN=0
 # Do we run dist-upgrade?
 UPGRADE=0
 
+# Set eth0 to use dhcp on cnat images
+CNAT_ETH0=0
+
 # Max Px nodes to build for lite/std/full
 MAXPLITE=4
 MAXPSTD=0

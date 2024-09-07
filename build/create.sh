@@ -159,8 +159,8 @@ EOF
         # Get any updates / install and remove pacakges
         chroot $MNT apt update -y
         if [ $UPGRADE = "1" ]; then
-            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y dist-upgrade'
-            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y upgrade' # not sure if needed
+            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y -o DPkg::options::="--force-overwrite" dist-upgrade'
+            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y -o DPkg::options::="--force-overwrite" upgrade' # not sure if needed
         fi
 
         INSTALL="rpiboot bridge-utils screen minicom git libusb-1.0-0-dev nfs-kernel-server busybox"
@@ -413,10 +413,19 @@ EOF
         LOOP=`losetup -fP --show $DEST/$DESTFILENAME-CNAT.img`
         sleep $SLEEP
         
-        mount ${LOOP}p1 $MNT
-        sed -i 's/^\(extraargs=.*\) init=\/usr\/sbin\/reconfig-clusterctrl cbridge\(.*\)/\1 init=\/usr\/sbin\/reconfig-clusterctrl cnat\2/' $MNT/orangepiEnv.txt
+        # mount ${LOOP}p1 $MNT
+        mount -o noatime,nodiratime ${LOOP}p2 $MNT
+        mount ${LOOP}p1 $MNT/$FW
+
+        sed -i 's/^\(extraargs=.*\) init=\/usr\/sbin\/reconfig-clusterctrl cbridge\(.*\)/\1 init=\/usr\/sbin\/reconfig-clusterctrl cnat\2/' $MNT/$FW/orangepiEnv.txt
+
+        if [ $CNAT_ETH0 -eq 1 ]; then
+            echo -e "auto eth0\niface eth0 inet dhcp" > $MNT/etc/network/interfaces.d/eth0
+        fi
+
         sync
         sleep $SLEEP
+        umount $MNT/$FW
         umount $MNT
 
         losetup -d $LOOP
