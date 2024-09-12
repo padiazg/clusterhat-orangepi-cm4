@@ -65,11 +65,11 @@ cat << EOF >> ~/mnt/etc/network/interfaces
 auto usb0
 allow-hotplug usb0
 iface usb0 inet dhcp
-metric 101
-up ip addr add 172.19.181.XXX/24 dev usb0 label usb0:1
-up ip route add 172.19.181.0/24 via 172.19.181.254 dev usb0:1 metric 121
-down ip addr del 172.19.181.XXX/24 dev usb0 label usb0:1
-down ip route del 172.19.181.0/24 via 172.19.181.254 dev usb0:1 metric 121
+  metric 101
+  up ip addr add 172.19.181.XXX/24 dev usb0 label usb0:1
+  up ip route add 172.19.181.0/24 via 172.19.181.254 dev usb0:1 metric 121
+  down ip addr del 172.19.181.XXX/24 dev usb0 label usb0:1
+  down ip route del 172.19.181.0/24 via 172.19.181.254 dev usb0:1 metric 121
 
 iface wlan0 inet manual
 iface eth0 inet manual

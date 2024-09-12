@@ -106,13 +106,38 @@ sudo i2cset -y -m $((2#00001000)) $I2CBUS 0x20 1 0xff
 ```
 
 ## Networking
-When using the cnat image of the controller and there's a dhcp server or a dns server in your network, like a pi-hole setup to use local domain plus valid certificates for it, you might need to do a small setup in order to allow communication from the controller and the Px nodes to the internet.
+When using the cnat image of the controller and there's a dhcp server or a dns server in your network, like a pi-hole setup to use local domain plus valid certificates for it, you might need to do a small setup in order to allow communication from the controller and the Px nodes to the internet.  
+> Use the `CNAT_ETH0` config variable to let the script set _eth0_ for you. 
 ```bash
 $ sudo bash -c 'echo "auto eth0\niface eth0 inet dhcp" > /etc/network/interfaces.d/eth0'
 ```
 Reboot or reload the networking service
 
-There's a new config.sh `CNAT_ETH0` variable to setup `eth0` when creating the image
+## Boot from eMMC
+1. Copy the image on a SD that can boot the board
+```bash
+# mount the SD card to copy the image
+$ mount /dev/sdXX /mnt/p2
+
+$ cp dest/Orangepicm4_1.0.6-1-ubuntu_jammy_server_linux5.10.160-ClusterCTRL-CNAT.img /mnt/p2/home/your_user
+```
+
+2. Boot the board with the SD, then copy the image to the eMMC
+```bash
+# identify the eMMC device
+$ ls /dev/mmcblk*boot0 | cut -c1-12**
+
+# clear the device
+$ sudo dd bs=1M if=/dev/zero of=/dev/mmcblk0 count=5000 status=progress
+
+# copy the image
+$ sudo dd bs=1M \
+	if=Orangepicm4_1.0.6-1-ubuntu_jammy_server_linux5.10.160-ClusterCTRL-CNAT.img \
+	of=/dev/mmcblk0 \
+	status=progress
+
+$ sync && reboot
+```
 
 ## Differences from upstream
 * As we are using images for boards different than Raspberry Pi the `/boot/cmdline.txt` is not available so we must use `/boot/orangepiEnv.txt` for setting init scripts. 
@@ -129,6 +154,6 @@ There's a new config.sh `CNAT_ETH0` variable to setup `eth0` when creating the i
 check:
   * https://forums.raspberrypi.com/viewtopic.php?t=108134
   * https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
-* `clusterctrl` needs privilege elevation (sudo)
+* ~`clusterctrl` needs privilege elevation (sudo)~~
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1

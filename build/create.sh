@@ -22,11 +22,6 @@ if [ ! -d "$MNT" ] ;then
  exit
 fi
 
-# if [ ! -d "$MNT2" ]; then
-#  echo "\$MNT2 directory does not exist."
-#  exit
-# fi
-
 # Get version from command line
 VER=$1
 
@@ -60,6 +55,10 @@ if [ $CNT -eq 0 ];then
  echo "No source file(s) found"
  exit
 fi
+
+if [ $WIPE_TMP_FOLDERS -eq 1 ]; then
+    rm -rf dest/* ||  rm -ef mnt/*
+fi 
 
 # Should we use qemu to modify the images
 # On Ubuntu this can be used after running
@@ -112,10 +111,7 @@ for BUILD in "${SOURCES[@]}"; do
         echo " Copying source image"
         cp "$SOURCE/$SOURCEFILENAME" "$DEST/$DESTFILENAME-CBRIDGE.img"
 
-    
-
         # Do we need to grow the image (second partition)?
-        # ???
         GROW="GROW$VARNAME" # Build variable name to check
         if [ ! ${!GROW} = "0" ];then
             # Get PTUUID
@@ -159,17 +155,13 @@ EOF
         # Get any updates / install and remove pacakges
         chroot $MNT apt update -y
         if [ $UPGRADE = "1" ]; then
-            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y -o DPkg::options::="--force-overwrite" dist-upgrade'
-            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y -o DPkg::options::="--force-overwrite" upgrade' # not sure if needed
+            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y dist-upgrade'
+            chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y upgrade' # not sure if needed
         fi
 
         INSTALL="rpiboot bridge-utils screen minicom git libusb-1.0-0-dev nfs-kernel-server busybox"
-        INSTALL+=" initramfs-tools-core python3-smbus python3-usb python3-usb1 python3-libusb1 ifmetric" # extras
-        INSTALL+=" gpiod libgpiod2" # needed by clusterctrl
-
-        if [ $RELEASE =  "BOOKWORM" -o $RELEASE = "JAMMY" ]; then
-            INSTALL+=" python3-libgpiod"
-        fi
+        INSTALL+=" initramfs-tools-core python3-smbus python3-usb python3-usb1 python3-libusb1" # extras
+        INSTALL+=" gpiod libgpiod2 python3-libgpiod" # needed by clusterctrl
 
         chroot $MNT /bin/bash -c "APT_LISTCHANGES_FRONTEND=none apt -y install $INSTALL"
         
@@ -177,14 +169,7 @@ EOF
         # Preseed answers for iptables-persistent install
         chroot $MNT /bin/bash -c "echo 'iptables-persistent iptables-persistent/autosave_v4 boolean false' | debconf-set-selections"
         chroot $MNT /bin/bash -c "echo 'iptables-persistent iptables-persistent/autosave_v6 boolean false' | debconf-set-selections"
-
         chroot $MNT /bin/bash -c 'APT_LISTCHANGES_FRONTEND=none apt -y install netfilter-persistent iptables-persistent'
-
-        # Remove ModemManager
-        # chroot $MNT systemctl disable ModemManager.service
-        # ERROR: Failed to disable unit, unit ModemManager.service does not exist.
-        chroot $MNT apt -y purge modemmanager
-        chroot $MNT apt-mark hold modemmanager  
 
         # Add more resolvers
         echo -e "nameserver 8.8.4.4\nnameserver 2001:4860:4860::8888\nnameserver 2001:4860:4860::8844" >> $MNT/etc/resolv.conf
@@ -211,12 +196,20 @@ COMMIT
 # Completed on Fri Mar 13 00:00:00 2018
 EOF
 
+        # Create gpio group
+        chroot $MNT groupadd gpio
+        
+        # Set user groups
+        USER_GROUPS=tty,disk,dialout,sudo,audio,video,plugdev,games,users,systemd-journal,input,netdev,i2c,gpio
+
         # Set custom password
-        if [ ! -z $PASSWORD ];then
+        if [ ! -z $PASSWORD ];then            
             if [ ! -z $USERNAME ];then
-                chroot $MNT useradd $USERNAME --password $PASSWORD --groups tty,disk,dialout,sudo,audio,video,plugdev,games,users,systemd-journal,input,netdev
+                PASSWORDE=$(echo "$PASSWORD" | openssl passwd -6 -stdin)
+                chroot $MNT useradd $USERNAME --password $PASSWORDE --create-home --groups $USER_GROUPS
             else
                 chroot $MNT /bin/bash -c "echo 'orangepi:$PASSWORD' | chpasswd"
+                chroot $MNT usermod -aG $USER_GROUPS orangepi
             fi
         fi
 

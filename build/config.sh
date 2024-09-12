@@ -76,6 +76,9 @@ USERSYSLOG=0
 # How many seconds to sleep for between each section
 SLEEP=5
 
+# Do we need to wipe the temporary folders before proceed?
+WIPE_TMP_FOLDERS=0
+
 # Load local config overrides
 if [ -f config-local.sh ];then
  source ./config-local.sh
