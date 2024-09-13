@@ -69,78 +69,78 @@ if [ ! -z $1 ];then
       cp -f "$CONFIGDIR/default-clusterctrl" /etc/default/clusterctrl
     fi
 
-  # Setup the interfaces/issue files
-  if [ "$1" = "cnat" ];then
-    rm -f /etc/network/interfaces.d/clusterctrl
-    if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
-      cp -f "$CONFIGDIR/interfaces.bookworm.cnat" /etc/network/interfaces.d/clusterctrl
+    # Setup the interfaces/issue files
+    if [ "$1" = "cnat" ];then
+      rm -f /etc/network/interfaces.d/clusterctrl
+      if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
+        cp -f "$CONFIGDIR/interfaces.bookworm.cnat" /etc/network/interfaces.d/clusterctrl
+      else
+        cp -f "$CONFIGDIR/interfaces.cnat" /etc/network/interfaces.d/clusterctrl
+      fi
+    
+      # TODO: check orangepi equivalent
+      #  sed -i "s/^dtoverlay=dwc2.*$/#dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
+      #  sed -i "s/^#otg_mode=1 # Controller only$/otg_mode=1 # Controller only/" /$BOOT/config.txt
+
+      sed -i "s#^127.0.1.1.*#127.0.1.1\tcnat#g" /etc/hosts
+      echo "cnat" > /etc/hostname
+      if [ -f /etc/dhcpcd.conf ]; then
+        sed -i 's~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.253/24 #ClusterCTRL~' /etc/dhcpcd.conf
+      fi
+
+      rm -f /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
+      sed -i "s/^#net.ipv4.ip_forward=1 # Cluster.*/net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
+      systemctl enable clusterctrl-init
+      systemctl disable clusterctrl-composite
+      echo "TYPE=cnat" >> /etc/default/clusterctrl
+
+    elif [ "$1" = "cbridge" ];then
+      rm -f /etc/network/interfaces.d/clusterctrl
+      if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
+        cp -f "$CONFIGDIR/interfaces.bookworm.cbridge" /etc/network/interfaces.d/clusterctrl
+      else
+        cp -f "$CONFIGDIR/interfaces.cbridge" /etc/network/interfaces.d/clusterctrl
+      fi
+      # cp -f "$CONFIGDIR/issue.c" /etc/issue
+
+      # TODO: check orangepi debian equivalent
+      #  sed -i "s/^dtoverlay=dwc2.*$/#dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
+      #  sed -i "s/^#otg_mode=1 # Controller only$/otg_mode=1 # Controller only/" /$BOOT/config.txt
+      sed -i "s#^127.0.1.1.*#127.0.1.1\tcbridge#g" /etc/hosts
+      echo "cbridge" > /etc/hostname
+      if [ -f /etc/dhcpcd.conf ]; then
+        sed -i 's~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.253/24 #ClusterCTRL~' /etc/dhcpcd.conf
+        sed -i 's#^\(denyinterfaces.*\)#\1 eth0#' /etc/dhcpcd.conf
+      fi
+      rm -f /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
+      sed -i "s/^net.ipv4.ip_forward=1 # ClusterCTRL/#net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
+      systemctl enable clusterctrl-init
+      systemctl disable clusterctrl-composite
+      echo "TYPE=c" >> /etc/default/clusterctrl
     else
-      cp -f "$CONFIGDIR/interfaces.cnat" /etc/network/interfaces.d/clusterctrl
-    fi
-  
-    # TODO: check orangepi equivalent
-    #  sed -i "s/^dtoverlay=dwc2.*$/#dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
-    #  sed -i "s/^#otg_mode=1 # Controller only$/otg_mode=1 # Controller only/" /$BOOT/config.txt
-
-    sed -i "s#^127.0.1.1.*#127.0.1.1\tcnat#g" /etc/hosts
-    echo "cnat" > /etc/hostname
-    if [ -f /etc/dhcpcd.conf ]; then
-      sed -i 's~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.253/24 #ClusterCTRL~' /etc/dhcpcd.conf
-    fi
-
-    rm -f /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
-    sed -i "s/^#net.ipv4.ip_forward=1 # Cluster.*/net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
-    systemctl enable clusterctrl-init
-    systemctl disable clusterctrl-composite
-    echo "TYPE=cnat" >> /etc/default/clusterctrl
-
-  elif [ "$1" = "cbridge" ];then
-    rm -f /etc/network/interfaces.d/clusterctrl
-    if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
-      cp -f "$CONFIGDIR/interfaces.bookworm.cbridge" /etc/network/interfaces.d/clusterctrl
-    else
-      cp -f "$CONFIGDIR/interfaces.cbridge" /etc/network/interfaces.d/clusterctrl
-    fi
-    # cp -f "$CONFIGDIR/issue.c" /etc/issue
-
-    # TODO: check orangepi debian equivalent
-    #  sed -i "s/^dtoverlay=dwc2.*$/#dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
-    #  sed -i "s/^#otg_mode=1 # Controller only$/otg_mode=1 # Controller only/" /$BOOT/config.txt
-    sed -i "s#^127.0.1.1.*#127.0.1.1\tcbridge#g" /etc/hosts
-    echo "cbridge" > /etc/hostname
-    if [ -f /etc/dhcpcd.conf ]; then
-      sed -i 's~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.253/24 #ClusterCTRL~' /etc/dhcpcd.conf
-      sed -i 's#^\(denyinterfaces.*\)#\1 eth0#' /etc/dhcpcd.conf
-    fi
-    rm -f /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
-    sed -i "s/^net.ipv4.ip_forward=1 # ClusterCTRL/#net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
-    systemctl enable clusterctrl-init
-    systemctl disable clusterctrl-composite
-    echo "TYPE=c" >> /etc/default/clusterctrl
-  else
-    P=${1:1}
-    rm -f /etc/network/interfaces.d/clusterctrl
-    if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
-      cp -f "$CONFIGDIR/interfaces.bookworm.p" /etc/network/interfaces.d/clusterctrl
-    fi
-    #  cp -f "$CONFIGDIR/issue.p" /etc/issue
-    sed -i "s#^127.0.1.1.*#127.0.1.1\t$1#g" /etc/hosts
-    sed -i "s/^#dtoverlay=dwc2.*$/dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
-    sed -i "s/^otg_mode=1 # Controller only$/#otg_mode=1 # Controller only/" /$BOOT/config.txt
-    echo "$1" > /etc/hostname
-    if [ -f /etc/dhcpcd.conf ]; then
-      sed -i "s~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.$P/24 #ClusterCTRL~" /etc/dhcpcd.conf
-    fi
-    if [ -f /etc/dhcp/dhclient.conf ];then
-      sed -i "s~^  fixed-address 172\.19\.181\..* # ClusterCTRL Px~  fixed-address 172.19.181.$P; # ClusterCTRL Px~" /etc/dhcp/dhclient.conf
-    fi
-    ln -fs /lib/systemd/system/getty@.service \
-      /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
-    systemctl disable clusterctrl-init
-    sed -i "s/^net.ipv4.ip_forward=1 # ClusterCTRL/#net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
-    echo "TYPE=node" >> /etc/default/clusterctrl
-    echo "ID=$P" >> /etc/default/clusterctrl
-    systemctl enable clusterctrl-composite
+      P=${1:1}
+      rm -f /etc/network/interfaces.d/clusterctrl
+      if [ $VERSION_CODENAME = "bookworm" -o $VERSION_CODENAME = "jammy" ];then
+        cp -f "$CONFIGDIR/interfaces.bookworm.p" /etc/network/interfaces.d/clusterctrl
+      fi
+      #  cp -f "$CONFIGDIR/issue.p" /etc/issue
+      sed -i "s#^127.0.1.1.*#127.0.1.1\t$1#g" /etc/hosts
+      # sed -i "s/^#dtoverlay=dwc2.*$/dtoverlay=dwc2,dr_mode=peripheral/" /$BOOT/config.txt
+      # sed -i "s/^otg_mode=1 # Controller only$/#otg_mode=1 # Controller only/" /$BOOT/config.txt
+      echo "$1" > /etc/hostname
+      if [ -f /etc/dhcpcd.conf ]; then
+        sed -i "s~^static ip_address=172.19.181.*/24 #Cluster.*~static ip_address=172.19.181.$P/24 #ClusterCTRL~" /etc/dhcpcd.conf
+      fi
+      if [ -f /etc/dhcp/dhclient.conf ];then
+        sed -i "s~^  fixed-address 172\.19\.181\..* # ClusterCTRL Px~  fixed-address 172.19.181.$P; # ClusterCTRL Px~" /etc/dhcp/dhclient.conf
+      fi
+      ln -fs /lib/systemd/system/getty@.service \
+        /etc/systemd/system/getty.target.wants/getty@ttyGS0.service
+      systemctl disable clusterctrl-init
+      sed -i "s/^net.ipv4.ip_forward=1 # ClusterCTRL/#net.ipv4.ip_forward=1 # ClusterCTRL/" /etc/sysctl.conf
+      echo "TYPE=node" >> /etc/default/clusterctrl
+      echo "ID=$P" >> /etc/default/clusterctrl
+      systemctl enable clusterctrl-composite
     fi
 
   else
