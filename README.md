@@ -156,5 +156,6 @@ check:
   * https://github.com/raspberrypi/hats/blob/master/devicetree-guide.md
 * ~`clusterctrl` needs privilege elevation (sudo)~~
 * DHCP settings to allow using local DNS server (i.e: local pi-hole)
+* Update scripts to use netplan where applicable
 
 For support contact: https://secure.8086.net/billing/submitticket.php?step=2&deptid=1
