@@ -206,7 +206,7 @@ EOF
         if [ ! -z $PASSWORD ];then            
             if [ ! -z $USERNAME ];then
                 PASSWORDE=$(echo "$PASSWORD" | openssl passwd -6 -stdin)
-                chroot $MNT useradd $USERNAME --password $PASSWORDE --create-home --groups $USER_GROUPS
+                chroot $MNT useradd $USERNAME --password $PASSWORDE --create-home -s /usr/bin/zsh --groups $USER_GROUPS
             else
                 chroot $MNT /bin/bash -c "echo 'orangepi:$PASSWORD' | chpasswd"
                 chroot $MNT usermod -aG $USER_GROUPS orangepi
@@ -215,6 +215,7 @@ EOF
 
         # Should we enable SSH?
         if [ $ENABLESSH = "1" ];then
+            chroot $MNT ssh-keygen -A
             chroot $MNT systemctl enable ssh
             chroot $MNT systemctl start ssh
         fi
